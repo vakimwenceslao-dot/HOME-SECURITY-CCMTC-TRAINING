@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HomeGuard 360 Quotation Calculator (Training)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@600&display=swap">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#f3f5f4; --panel:#ffffff; --ink:#16231f; --muted:#5b6b66; --line:#d5dcd9;
+  --accent:#0f5c4d; --accent-ink:#ffffff; --hl:#fff1cf; --hl-ink:#6b4a00; --up:#a63d2f; --down:#1c7a4f; --input:#fbfcfb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1715; --panel:#17221f; --ink:#e8efec; --muted:#9bb0a9; --line:#2b3b36;
+    --accent:#4fc2a5; --accent-ink:#06211a; --hl:#3a2f10; --hl-ink:#ffd98a; --up:#ff8e7e; --down:#6fd6a3; --input:#111b18;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1715; --panel:#17221f; --ink:#e8efec; --muted:#9bb0a9; --line:#2b3b36;
+  --accent:#4fc2a5; --accent-ink:#06211a; --hl:#3a2f10; --hl-ink:#ffd98a; --up:#ff8e7e; --down:#6fd6a3; --input:#111b18;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 40px}
+header{margin-bottom:14px}
+h1{font:600 28px/1.2 "Source Serif 4",Georgia,serif;margin:0 0 6px}
+.sub{color:var(--muted);margin:0;max-width:64ch}
+.badge{display:inline-block;background:var(--hl);color:var(--hl-ink);border-radius:4px;padding:2px 8px;font-size:13px;font-weight:500;margin-bottom:10px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:16px 0}
+.tabs button{border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;background:none;padding:9px 16px;margin-bottom:-1px;color:var(--muted)}
+.tabs button[aria-selected=true]{background:var(--panel);border-color:var(--line);color:var(--ink);font-weight:600}
+.view[hidden]{display:none}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px}
+.panel h2{font-size:16px;margin:0 0 12px;font-weight:600}
+.panel + .panel{margin-top:16px}
+label.f{display:block;font-size:14px;font-weight:500;margin-bottom:12px}
+input[type=text],input[type=number],input[type=email],input[type=tel],input[type=date],select{width:100%;margin-top:5px;padding:10px 11px;font:inherit;color:var(--ink);background:var(--input);border:1px solid var(--line);border-radius:6px}
+input[readonly]{background:transparent;color:var(--muted)}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+textarea{width:100%;font:inherit;color:var(--ink);background:var(--input);border:1px solid var(--line);border-radius:6px;padding:10px 11px;min-height:70px}
+.cov{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:6px;margin-bottom:8px;cursor:pointer;background:var(--input)}
+.cov:has(input:checked){border-color:var(--accent);background:var(--hl)}
+.cov input{margin-top:4px;width:18px;height:18px;accent-color:var(--accent);flex:none}
+.cov b{display:block;font-weight:500}
+.cov small{color:var(--muted)}
+.cov:has(input:checked) small,.cov:has(input:checked) .amt{color:var(--hl-ink)}
+.cov .amt{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;font-size:14px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button{font:inherit;font-weight:500;padding:9px 14px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.quote{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media(max-width:820px){.quote{position:static}}
+.total{font:600 44px/1.1 "Source Serif 4",Georgia,serif;margin:2px 0 4px;font-variant-numeric:tabular-nums}
+.cmp{font-size:15px;margin:0 0 14px}
+.up{color:var(--up);font-weight:600}.down{color:var(--down);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+td{padding:7px 0;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right;white-space:nowrap}
+tr.sub td{font-weight:600;border-bottom:2px solid var(--line)}
+tr.sum td{font-weight:600;border-bottom:none;padding-top:10px}
+.note{color:var(--muted);font-size:13px;margin:12px 0 0}
+.scroll{overflow-x:auto}
+details summary{cursor:pointer;font-weight:600}
+.rates{display:grid;grid-template-columns:1fr 110px;gap:6px 10px;margin-top:12px;font-size:14px;align-items:center}
+.rates input{margin:0;padding:6px 8px;width:100%}
+.rates h3{grid-column:1/-1;margin:10px 0 0;font-size:13px;color:var(--muted);font-weight:600}
+.info{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:-4px 0 14px;font-size:14px}
+.info p{margin:0 0 6px;color:var(--muted)}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+@media(max-width:480px){.pc{grid-template-columns:1fr}}
+.pc ul{list-style:none;margin:0;padding:0}
+.pc li{padding-left:18px;position:relative;margin-bottom:2px}
+.pc .pro li:before{content:"+";position:absolute;left:3px;color:var(--down);font-weight:700}
+.pc .con li:before{content:"\2212";position:absolute;left:3px;color:var(--up);font-weight:700}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.row2{grid-template-columns:1fr}}
+.dg{display:grid;gap:8px}
+.plan{display:inline-block;margin:0 0 6px;padding:2px 12px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--line)}
+.plan:empty{display:none}
+.plan.p0{background:var(--input);color:var(--muted)}
+.plan.p1{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.plan.p2{background:var(--hl);color:var(--hl-ink);border-color:var(--hl-ink)}
+/* quotation document */
+.doc{max-width:860px;margin:0 auto}
+.doc .head{text-align:center;margin-bottom:14px;color:var(--muted);font-size:13px}
+.doc .head h2{font:600 24px/1.2 "Source Serif 4",Georgia,serif;color:var(--ink);margin:10px 0 0}
+.doc h3{font-size:15px;margin:20px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--accent)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:600px){.fg{grid-template-columns:1fr}}
+.fg label{font-size:13px;font-weight:500;margin-bottom:8px;display:block}
+.fg label.wide{grid-column:1/-1}
+.fg input,.fg select{margin-top:3px;padding:7px 9px}
+.cv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+.cv .y{color:var(--down);font-weight:600}.cv .n{color:var(--muted)}
+.opts{display:flex;gap:8px 18px;flex-wrap:wrap;font-size:14px;margin-bottom:8px;align-items:center}
+.opts b{min-width:150px;font-weight:500}
+.opts label{display:flex;gap:6px;align-items:center}
+.opts input{accent-color:var(--accent);width:16px;height:16px}
+.disc{font-size:14px;margin:0 0 6px;color:var(--muted)}
+.sig{border-bottom:1px solid var(--ink);height:34px;margin-top:6px}
+.prem{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:6px}
+@media(max-width:600px){.prem{grid-template-columns:1fr}}
+.prem div{border:1px solid var(--line);border-radius:6px;padding:10px 12px;background:var(--input)}
+.prem small{display:block;color:var(--muted);font-size:12px}
+.prem strong{font-size:20px;font-variant-numeric:tabular-nums}
+@media print{
+  :root{--bg:#fff;--panel:#fff;--ink:#000;--muted:#444;--line:#999;--input:#fff;--accent:#0f5c4d;--hl:#fff;--hl-ink:#000}
+  header,.tabs,.btns,#calcView,.noprint{display:none !important}
+  #formView{display:block !important}
+  body{background:#fff}
+  .panel{border:none;padding:0}
+  input,select,textarea{border:none !important;border-bottom:1px solid #999 !important;border-radius:0 !important;background:transparent !important;padding-left:0 !important}
+  select{appearance:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">Training use only. Rates are made up.</span>
+    <h1>HomeGuard 360 quotation calculator</h1>
+    <p class="sub">Work out a home insurance quote from the roof, materials and covers the client wants, then carry the details straight into the quotation form.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabCalc" aria-selected="true" type="button">Calculator</button>
+    <button role="tab" id="tabForm" aria-selected="false" type="button">Quotation form</button>
+  </div>
+
+  <!-- ================= CALCULATOR ================= -->
+  <div class="view" id="calcView">
+  <div class="grid">
+    <div>
+      <section class="panel">
+        <h2>Client and previous cover</h2>
+        <label class="f">Client name
+          <input type="text" id="client" data-sync="name" placeholder="e.g. Juan Dela Cruz">
+        </label>
+        <label class="f">Previous coverage from other company ($)
+          <input type="number" id="prev" data-sync="prev" min="0" step="10" value="1500">
+        </label>
+      </section>
+
+      <section class="panel">
+        <h2>The roof</h2>
+        <label class="f">Roof style
+          <select id="roof"></select>
+        </label>
+        <div class="info" id="roofInfo"></div>
+        <label class="f">Roof material
+          <select id="mat"></select>
+        </label>
+        <div class="info" id="matInfo"></div>
+        <label class="cov" for="garage">
+          <input type="checkbox" id="garage">
+          <span><b>Has a garage</b><small>Adds a flat risk loading to the quote</small></span>
+          <span class="amt" id="garageAmt"></span>
+        </label>
+      </section>
+
+      <section class="panel">
+        <h2>Coverage requested</h2>
+        <div id="covs"></div>
+        <h2 style="margin-top:18px">Discounts</h2>
+        <div id="discs"></div>
+        <label class="cov" for="d_sp">
+          <input type="checkbox" id="d_sp" data-sck="sp">
+          <span><b>Senior citizen / PWD</b><small>Flat discount of $10 to $50, set by the agent</small></span>
+          <span class="amt">$<input type="number" id="spAmt" min="10" max="50" step="5" value="30" aria-label="Senior or PWD discount in dollars" style="width:76px;height:auto;margin:0 0 0 4px;padding:6px 8px"></span>
+        </label>
+        <div class="btns">
+          <button class="primary" id="example" type="button">Load the $2,000 example</button>
+          <button id="reset" type="button">Clear form</button>
+          <button id="toForm" type="button">Open quotation form</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <details>
+          <summary>Rate settings (change these to practise)</summary>
+          <div class="rates" id="rates"></div>
+        </details>
+      </section>
+    </div>
+
+    <aside class="panel quote" aria-live="polite">
+      <h2 id="qname">Quotation</h2>
+      <div class="total" id="total">$0</div>
+      <div class="plan" id="plan"></div>
+      <p class="cmp" id="cmp"></p>
+      <div class="scroll"><table id="tbl"></table></div>
+      <p class="note">Formula: base premium + selected covers = subtotal. Then multiply by the roof, material and garage factors, take off any discounts, and round to the nearest $10.</p>
+    </aside>
+  </div>
+  </div>
+
+  <!-- ================= QUOTATION FORM ================= -->
+  <div class="view" id="formView" hidden>
+    <div class="panel doc">
+      <div class="head">
+        456 Elm Street, Suite 3, Los Angeles CA 90001, USA<br>
+        Info.Homeguard360@gmail.com<br>
+        +97123456789 (Telephone)
+        <h2>HOMEGUARD 360 HOME INSURANCE QUOTE</h2>
+      </div>
+      <div class="fg"><label class="wide">Policy number <input type="text" id="policy"></label></div>
+      <div id="sections"></div>
+
+      <h3>Insurance coverage needs</h3>
+      <div id="covList"></div>
+
+      <h3>Premium summary</h3>
+      <div class="prem">
+        <div><small>Annual premium</small><strong id="pAnnual">$0</strong></div>
+        <div><small>Plan</small><strong id="pPlan" style="font-size:16px">Not set</strong></div>
+        <div><small id="pModeLbl">Payment mode amount</small><strong id="pInst">$0</strong></div>
+        <div><small>Payment method</small><strong id="pMethod" style="font-size:16px">Not chosen</strong></div>
+      </div>
+      <p class="disc" id="pDisc"></p>
+
+      <div id="risk"></div>
+
+      <h3>Payment preferences</h3>
+      <div class="opts"><b>Preferred payment mode:</b>
+        <label><input type="radio" name="pmode" value="1" checked> Annual</label>
+        <label><input type="radio" name="pmode" value="2"> Semi-annual</label>
+        <label><input type="radio" name="pmode" value="4"> Quarterly</label>
+        <label><input type="radio" name="pmode" value="12"> Monthly</label>
+      </div>
+      <div class="opts"><b>Payment method:</b>
+        <label><input type="radio" name="pmethod" value="Cash"> Cash</label>
+        <label><input type="radio" name="pmethod" value="Bank transfer"> Bank transfer</label>
+        <label><input type="radio" name="pmethod" value="Credit/debit card"> Credit/debit card</label>
+        <label><input type="radio" name="pmethod" value="Online"> Online</label>
+      </div>
+      <div class="opts"><b>Discounts applied:</b><span id="fDiscs" style="display:contents"></span>
+        <label><input type="checkbox" id="fd_sp" data-sck="sp"> Senior citizen / PWD</label></div>
+
+      <h3>Notes and disclosures</h3>
+      <p class="disc">This is a <b>quote only</b> and not a binding insurance contract.<br>Final rates may vary after underwriting and property inspection.<br>Additional surcharges, fees, or endorsements may apply.</p>
+
+      <h3>Agent/advisor notes</h3>
+      <textarea id="agentNotes" aria-label="Agent notes"></textarea>
+      <div class="fg" style="margin-top:20px">
+        <div><small>Agent signature</small><div class="sig"></div></div>
+        <div><small>Applicant signature</small><div class="sig"></div></div>
+      </div>
+
+      <div class="btns noprint">
+        <button class="primary" id="print" type="button">Print or save as PDF</button>
+        <button id="back" type="button">Back to calculator</button>
+      </div>
+      <p class="note noprint" id="printNote"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Reference data (from the roof guide) ----------
+var R = {
+  base: 1000,
+  covers: [
+    {id:'fire',  name:'Fire and Lightning',                     desc:'Damage from fire and lightning strikes', pct:30},
+    {id:'nat',   name:'Typhoon, Flood, Earthquake',             desc:'Natural catastrophe damage',            pct:45},
+    {id:'theft', name:'Burglary, Theft, and Malicious Damage',  desc:'Break-ins, stolen items, vandalism',    pct:15},
+    {id:'liab',  name:'Personal Liability Coverage',            desc:'Injury or damage to third parties',     pct:10},
+    {id:'rent',  name:'Loss of Rent/Alternative Accommodation', desc:'Rent or housing while repairs are done',pct:12}
+  ],
+  roofs:[
+    {n:'Gable roof', f:1.04, d:'Two sloping sides that meet at a ridge, forming a triangle.', pro:['Simple and cost-effective','Good ventilation','Works in most climates'], con:['Less attic space than some types']},
+    {n:'Hip roof', f:1.00, d:'Slopes down on all four sides.', pro:['Very stable','Better wind resistance','More durable'], con:['More expensive','Less attic space']},
+    {n:'Dutch gable roof', f:1.06, d:'A gable on top of a hip roof. Combines two styles.', pro:['Extra attic space','Unique appearance','Good ventilation'], con:['Complex design','Higher cost']},
+    {n:'Mansard roof', f:1.10, d:'Four sides with two slopes on each; the lower slope is steeper.', pro:['Maximizes attic space','Classic French style','Great for additions'], con:['More expensive','Complex to build']},
+    {n:'Flat roof', f:1.12, d:'Nearly level roof with a slight slope for drainage.', pro:['Modern look','Usable outdoor space','Lower cost (simple structure)'], con:['Drainage issues if poorly designed','Not ideal in heavy snow areas']},
+    {n:'Shed roof', f:1.08, d:'A single sloping surface.', pro:['Modern and simple','Great for add-ons or small homes','Cost-effective'], con:['Limited attic space','Less traditional look']},
+    {n:'Butterfly roof', f:1.10, d:'V-shaped roof that slopes inward.', pro:['Collects rainwater','Unique modern style','Good for warm climates'], con:['Not ideal in heavy snow areas','Needs proper drainage']},
+    {n:'Gambrel roof', f:1.07, d:'Two slopes on each side, with the lower slope steeper.', pro:['More attic space','Classic barn style','Functional'], con:['More complex','Higher cost']},
+    {n:'Dormer roof', f:1.06, d:'Adds a vertical window that projects from a sloping roof.', pro:['Adds light and space','Increases headroom','Enhances curb appeal'], con:['Can cause leaks if not sealed well','Adds to construction cost']},
+    {n:'M-shaped roof', f:1.09, d:'Two gable roofs connected by a valley in the middle.', pro:['Unique appearance','Allows for more natural light','Works well for large homes'], con:['Complex structure','Higher construction cost']}
+  ],
+  mats:[
+    {n:'Asphalt shingles', f:1.05, d:'The most common roofing material in the U.S. Affordable and versatile.', pro:['Low cost','Easy to install','Many colors/styles','Widely available'], con:['Shorter lifespan (15-30 years)','Less durable in extreme weather']},
+    {n:'Metal roofing', f:1.00, d:'Durable and energy-efficient roofing available in various metals.', pro:['Long lifespan (40-70 years)','Reflects heat','Fire resistant','Low maintenance'], con:['Higher upfront cost','Can be noisy in heavy rain']},
+    {n:'Clay / concrete tile', f:0.97, d:'Classic and durable tile roofing, popular in warmer climates.', pro:['Very long lifespan (50-100+ years)','Fire resistant','Excellent insulation','High wind resistance'], con:['Heavy, needs strong structure','High installation cost']},
+    {n:'Natural slate', f:1.02, d:'Premium natural stone roofing with timeless beauty.', pro:['Extremely durable (75-100+ years)','Fire resistant','Eco-friendly','Elegant appearance'], con:['Very high cost','Very heavy','Professional installation needed']},
+    {n:'Wood shake / shingles', f:1.30, d:'Natural wood roofing that adds charm and character.', pro:['Natural look','Good insulation','Renewable material'], con:['High maintenance','Prone to fire, rot and insects','Shorter lifespan (20-30 years)']}
+  ],
+  garage: 1.09,
+  plans:[{n:'Basic plan',min:0},{n:'Premium plan',min:2000},{n:'Gold plan',min:3000}],
+  discs:[
+    {id:'multi', name:'Multi-policy', pct:5},
+    {id:'sec',   name:'Security system', pct:3},
+    {id:'new',   name:'New home', pct:4}
+  ]
+};
+var STATE = {total:0, any:false, base:0, discAmt:0};
+
+var $ = function(id){return document.getElementById(id)};
+function money(n){return '$'+Math.round(n).toLocaleString('en-US')}
+function money2(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function pct(n){return (n>0?'+':'')+n.toFixed(1)+'%'}
+function find(arr,name){for(var i=0;i<arr.length;i++){if(arr[i].n===name)return arr[i];}return arr[0];}
+
+// ---------- Builders ----------
+function fillSelect(sel, arr, chosen){
+  sel.innerHTML='';
+  arr.forEach(function(o){var e=document.createElement('option'); e.value=o.n; e.textContent=o.n; sel.appendChild(e);});
+  sel.value=chosen;
+}
+function info(o){
+  return '<p>'+o.d+'</p><div class="pc"><ul class="pro">'+o.pro.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><ul class="con">'+o.con.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></div>';
+}
+function buildCovers(){
+  var keep={}; R.covers.forEach(function(c){var el=$('c_'+c.id); if(el) keep[c.id]=el.checked;});
+  $('covs').innerHTML='';
+  R.covers.forEach(function(c){
+    var l=document.createElement('label'); l.className='cov'; l.htmlFor='c_'+c.id;
+    l.innerHTML='<input type="checkbox" id="c_'+c.id+'"><span><b>'+c.name+'</b><small>'+c.desc+'</small></span><span class="amt" id="a_'+c.id+'"></span>';
+    $('covs').appendChild(l);
+    var cb=l.querySelector('input'); cb.checked=!!keep[c.id]; cb.addEventListener('change',calc);
+  });
+}
+function buildDiscs(){
+  var keep={}; R.discs.forEach(function(d){var el=$('d_'+d.id); if(el) keep[d.id]=el.checked;});
+  $('discs').innerHTML=''; $('fDiscs').innerHTML='';
+  R.discs.forEach(function(d){
+    var l=document.createElement('label'); l.className='cov'; l.htmlFor='d_'+d.id;
+    l.innerHTML='<input type="checkbox" id="d_'+d.id+'" data-sck="'+d.id+'"><span><b>'+d.name+'</b><small>Takes '+d.pct+'% off the quote</small></span>';
+    $('discs').appendChild(l);
+    var f=document.createElement('label');
+    f.innerHTML='<input type="checkbox" id="fd_'+d.id+'" data-sck="'+d.id+'"> '+d.name;
+    $('fDiscs').appendChild(f);
+    ['d_','fd_'].forEach(function(p){var el=$(p+d.id); el.checked=!!keep[d.id]; el.addEventListener('change',function(){
+      var v=el.checked; document.querySelectorAll('[data-sck="'+d.id+'"]').forEach(function(o){o.checked=v;}); calc();
+    });});
+  });
+}
+function buildRates(){
+  var h='';
+  function add(label,key,val,step){h+='<label for="'+key+'">'+label+'</label><input type="number" id="'+key+'" step="'+step+'" value="'+val+'">';}
+  h+='<h3>Base premium</h3>'; add('Base premium ($)','r_base',R.base,10);
+  h+='<h3>Cover loadings (% of base)</h3>';
+  R.covers.forEach(function(c){add(c.name,'r_c_'+c.id,c.pct,1);});
+  h+='<h3>Roof style factors</h3>';
+  R.roofs.forEach(function(o,i){add(o.n,'r_roof_'+i,o.f,0.01);});
+  h+='<h3>Roof material factors</h3>';
+  R.mats.forEach(function(o,i){add(o.n,'r_mat_'+i,o.f,0.01);});
+  h+='<h3>Garage factor</h3>'; add('Garage','r_garage',R.garage,0.01);
+  h+='<h3>Plan thresholds (quote of at least)</h3>'; add(R.plans[1].n+' from ($)','r_p1',R.plans[1].min,100); add(R.plans[2].n+' from ($)','r_p2',R.plans[2].min,100);
+  h+='<h3>Discounts (%)</h3>';
+  R.discs.forEach(function(d){add(d.name,'r_d_'+d.id,d.pct,1);});
+  $('rates').innerHTML=h;
+  $('rates').querySelectorAll('input').forEach(function(el){el.addEventListener('input',readRates);});
+}
+function readRates(){
+  var n=function(id,d){var v=parseFloat($(id).value); return isNaN(v)?d:v;};
+  R.base=n('r_base',R.base);
+  R.covers.forEach(function(c){c.pct=n('r_c_'+c.id,c.pct);});
+  R.roofs.forEach(function(o,i){o.f=n('r_roof_'+i,o.f);});
+  R.mats.forEach(function(o,i){o.f=n('r_mat_'+i,o.f);});
+  R.garage=n('r_garage',R.garage);
+  R.plans[1].min=n('r_p1',R.plans[1].min); R.plans[2].min=n('r_p2',R.plans[2].min);
+  R.discs.forEach(function(d){d.pct=n('r_d_'+d.id,d.pct);});
+  document.querySelectorAll('#discs small').forEach(function(s,i){s.textContent='Takes '+R.discs[i].pct+'% off the quote';});
+  calc();
+}
+
+// ---------- Quotation form fields ----------
+var HOME=['House','Townhouse','Condominium / apartment','Duplex','Other'];
+var CONS=['Concrete / masonry','Wood frame','Steel frame','Mixed'];
+var PARK=['Garage','Carport','Driveway / street','None'];
+var SECTIONS=[
+ {t:'General information', f:[['Name','name','text',{sync:'name'}],['Email','email','email'],['Home address','homeaddr','text'],['Age','age','number'],['Mailing address','mailaddr','text'],['Phone number','phone','tel'],['Occupation','occ','text'],['Date of birth','dob','date'],['Co-applicant','coapp','text'],['Co-applicant date of birth','codob','date']]},
+ {t:'Company insurance details (previous insurer)', f:[['Company name','compname','text'],['Amount insured ($)','prevF','number',{sync:'prev'}],['Policy start date','pstart','date'],['Policy expiration date','pend','date']]},
+ {t:'Property details', f:[['Property address','propaddr','text',{wide:1}],['Year built','yb','number'],['Home type','htype','select',{opts:HOME}],['Bedrooms','beds','number'],['Bathrooms','baths','number'],['Construction type','ctype','select',{opts:CONS}],['Parking type','park','select',{opts:PARK}],['Roof style','roofS','text',{ro:1}],['Roof type (material)','roofT','text',{ro:1}],['Heating','heat','text'],['Cooling','cool','text'],['Number of floors','floors','number'],['Floor area (sqft)','area','number'],['Estimated property value ($)','pval','number']]},
+ {t:'Risk assessment', f:[['Nearby fire station (minutes and miles away)','fs','text',{wide:1}],['Nearby hospital (minutes and miles away)','hosp','text',{wide:1}],['Fire alarm / sprinkler system','alarm','text',{wide:1}],['Security system (CCTV, guards, etc.)','secsys','text',{wide:1}],['Past claims history','claims','text',{wide:1}]]}
+];
+function buildSections(){
+  var out='';
+  SECTIONS.forEach(function(s){
+    out+='<h3>'+s.t+'</h3><div class="fg">';
+    s.f.forEach(function(f){
+      var o=f[3]||{}, cls=o.wide?' class="wide"':'', attrs=(o.sync?' data-sync="'+o.sync+'"':'')+(o.ro?' readonly tabindex="-1"':'');
+      out+='<label'+cls+'>'+f[0]+' ';
+      if(f[2]==='select') out+='<select id="'+f[1]+'">'+o.opts.map(function(x){return '<option>'+x+'</option>'}).join('')+'</select>';
+      else out+='<input type="'+f[2]+'" id="'+f[1]+'"'+attrs+'>';
+      out+='</label>';
+    });
+    out+='</div>';
+  });
+  $('sections').innerHTML=out;
+}
+
+// ---------- Calculation ----------
+function planFor(t){var p=R.plans[0]; R.plans.forEach(function(x){if(t>=x.min)p=x;}); return p;}
+function row(label,val,cls){return '<tr'+(cls?' class="'+cls+'"':'')+'><td>'+label+'</td><td>'+val+'</td></tr>';}
+
+function calc(){
+  var roof=find(R.roofs,$('roof').value), mat=find(R.mats,$('mat').value), garage=$('garage').checked;
+  var prev=parseFloat($('prev').value)||0;
+  $('roofInfo').innerHTML=info(roof); $('matInfo').innerHTML=info(mat);
+  var html=row('Base premium',money(R.base));
+  var sub=R.base, any=false, included=[];
+  R.covers.forEach(function(c){
+    var amt=R.base*c.pct/100;
+    $('a_'+c.id).textContent='+'+money(amt);
+    var on=$('c_'+c.id).checked;
+    if(on){sub+=amt; any=true; html+=row(c.name,'+'+money(amt));}
+  });
+  if(!any) html+=row('<span style="color:var(--muted)">No covers selected yet</span>','');
+  html+=row('Subtotal',money(sub),'sub');
+  var fg=garage?R.garage:1;
+  $('garageAmt').textContent='x'+R.garage.toFixed(2);
+  html+=row('Roof style: '+roof.n,'x'+roof.f.toFixed(2));
+  html+=row('Roof material: '+mat.n,'x'+mat.f.toFixed(2));
+  html+=row('Garage',garage?'x'+fg.toFixed(2):'none');
+  var raw=sub*roof.f*mat.f*fg, dm=1, dnames=[];
+  R.discs.forEach(function(d){ if($('d_'+d.id).checked){dm*=(1-d.pct/100); html+=row('Discount: '+d.name,'-'+d.pct+'%'); dnames.push(d.name);} });
+  var preTotal=any?Math.round(raw*dm/10)*10:0;
+  var flat=0;
+  if(any && $('d_sp').checked){
+    flat=Math.min(50,Math.max(10,parseFloat($('spAmt').value)||10));
+    html+=row('Senior citizen / PWD discount','-'+money(flat));
+    dnames.push('Senior citizen / PWD');
+  }
+  var total=Math.max(0,preTotal-flat);
+  html+=row('Quotation',money(total),'sum');
+  $('tbl').innerHTML=html;
+  $('total').textContent=money(total);
+  var pl=any?planFor(preTotal):null;
+  $('plan').textContent=pl?pl.n:'';
+  $('plan').className='plan'+(pl?' p'+R.plans.indexOf(pl):'');
+  var nm=$('client').value.trim();
+  $('qname').textContent=nm?'Quotation for '+nm:'Quotation';
+  var c=$('cmp');
+  if(!any){c.textContent='Pick at least one cover to see a quote.';}
+  else if(prev>0){
+    var d=total-prev, p=d/prev*100;
+    if(d===0) c.innerHTML='Same as the previous coverage of '+money(prev)+'.';
+    else c.innerHTML='Previous coverage '+money(prev)+'. This quote is <span class="'+(d>0?'up':'down')+'">'+money(Math.abs(d))+' '+(d>0?'higher':'lower')+' ('+pct(p)+')</span>.';
+  } else c.textContent='Enter the previous coverage to compare.';
+  STATE.total=total; STATE.any=any; STATE.plan=pl?pl.n:'';
+  updateForm(roof,mat,dnames);
+}
+
+function updateForm(roof,mat,dnames){
+  $('roofS').value=roof.n; $('roofT').value=mat.n;
+  $('park').value=$('garage').checked?'Garage':($('park').value==='Garage'?'Driveway / street':$('park').value);
+  var h='';
+  R.covers.forEach(function(c){
+    h+='<div class="cv"><span>'+c.name+'</span><span class="'+($('c_'+c.id).checked?'y':'n')+'">'+($('c_'+c.id).checked?'Included':'Not included')+'</span></div>';
+  });
+  $('covList').innerHTML=h;
+  $('pAnnual').textContent=money(STATE.total);
+  $('pPlan').textContent=STATE.plan||'Not set';
+  var m=parseInt(document.querySelector('input[name=pmode]:checked').value,10);
+  var names={1:'Annual',2:'Semi-annual',4:'Quarterly',12:'Monthly'};
+  $('pModeLbl').textContent=names[m]+' payment';
+  $('pInst').textContent=money2(STATE.total/m);
+  var pm=document.querySelector('input[name=pmethod]:checked');
+  $('pMethod').textContent=pm?pm.value:'Not chosen';
+  $('pDisc').textContent=dnames.length?'Discounts applied: '+dnames.join(', ')+'.':'No discounts applied.';
+}
+
+// ---------- Actions ----------
+function loadExample(){
+  $('client').value='Sample client'; $('client').dispatchEvent(new Event('input'));
+  $('prev').value=1500; $('prev').dispatchEvent(new Event('input'));
+  $('roof').value='Hip roof'; $('mat').value='Asphalt shingles'; $('garage').checked=true;
+  $('d_sp').checked=false; $('fd_sp').checked=false;
+  R.covers.forEach(function(c){$('c_'+c.id).checked=(c.id==='fire'||c.id==='nat');});
+  R.discs.forEach(function(d){document.querySelectorAll('[data-sck="'+d.id+'"]').forEach(function(o){o.checked=false;});});
+  calc();
+}
+function resetForm(){
+  $('client').value=''; $('prev').value='';
+  document.querySelectorAll('[data-sync]').forEach(function(e){e.value='';});
+  $('roof').selectedIndex=0; $('mat').selectedIndex=0; $('garage').checked=false;
+  $('d_sp').checked=false; $('fd_sp').checked=false; $('spAmt').value=30;
+  R.covers.forEach(function(c){$('c_'+c.id).checked=false;});
+  R.discs.forEach(function(d){document.querySelectorAll('[data-sck="'+d.id+'"]').forEach(function(o){o.checked=false;});});
+  calc();
+}
+function show(which){
+  var f=which==='form';
+  $('calcView').hidden=f; $('formView').hidden=!f;
+  $('tabCalc').setAttribute('aria-selected',String(!f)); $('tabForm').setAttribute('aria-selected',String(f));
+  window.scrollTo(0,0);
+}
+function iso(d){return d.toISOString().slice(0,10)}
+
+// ---------- Init ----------
+fillSelect($('roof'),R.roofs,'Hip roof');
+fillSelect($('mat'),R.mats,'Asphalt shingles');
+buildCovers(); buildDiscs(); buildRates(); buildSections();
+
+var today=new Date(), nextYr=new Date(today); nextYr.setFullYear(today.getFullYear()+1);
+$('pstart').value=iso(today); $('pend').value=iso(nextYr);
+$('pstart').addEventListener('change',function(){var d=new Date($('pstart').value); if(!isNaN(d)){d.setFullYear(d.getFullYear()+1); $('pend').value=iso(d);}});
+$('policy').value='HG360-'+iso(today).replace(/-/g,'')+'-001';
+
+document.querySelectorAll('[data-sync]').forEach(function(el){
+  el.addEventListener('input',function(){
+    var k=el.getAttribute('data-sync');
+    document.querySelectorAll('[data-sync="'+k+'"]').forEach(function(o){if(o!==el)o.value=el.value;});
+    calc();
+  });
+});
+['roof','mat','garage'].forEach(function(id){$(id).addEventListener('input',calc);$(id).addEventListener('change',calc);});
+$('park').addEventListener('change',function(){$('garage').checked=($('park').value==='Garage'); calc();});
+document.querySelectorAll('input[name=pmode],input[name=pmethod]').forEach(function(e){e.addEventListener('change',calc);});
+['d_sp','fd_sp'].forEach(function(id){$(id).addEventListener('change',function(){var v=$(id).checked; document.querySelectorAll('[data-sck="sp"]').forEach(function(o){o.checked=v;}); calc();});});
+$('spAmt').addEventListener('input',calc);
+$('spAmt').addEventListener('change',function(){var v=parseFloat($('spAmt').value)||10; $('spAmt').value=Math.min(50,Math.max(10,v)); calc();});
+$('example').addEventListener('click',loadExample);
+$('reset').addEventListener('click',resetForm);
+$('toForm').addEventListener('click',function(){show('form')});
+$('back').addEventListener('click',function(){show('calc')});
+$('tabCalc').addEventListener('click',function(){show('calc')});
+$('tabForm').addEventListener('click',function(){show('form')});
+$('print').addEventListener('click',function(){
+  try{window.print();}catch(e){}
+  $('printNote').textContent='If nothing opened, your viewer may block printing here. Open this page in its own browser tab and try again, or use your browser menu to print.';
+});
+loadExample();
+</script>
+</body>
+</html>
